@@ -4,15 +4,21 @@ require 'pdf/reader'
 
 class Ssereport
     def initialize(filename)
-        @file = filename
         @ids = []
-    end
-
-    def read_from_file
-        idfile = File.open(@file, "r")
+        idfile = File.open(filename, "r")
         today = Time.now
         # idfile.each { |line| @ids << ("http://static.sse.com.cn/disclosure/listedinfo/announcement/c/#{today.strftime("%Y-%m-%d")}/#{line.chomp}.pdf").chomp }
         idfile.each { |line| @ids << ("http://static.sse.com.cn/disclosure/listedinfo/announcement/c/2015-04-29/#{line.chomp}.pdf").chomp }
+        
+        @ids.each do |link|
+            if link_available?(link)
+                doc = open(link)
+                @reader = PDF::Reader.new(doc)
+                puts @reader.info
+            else
+                puts "ERROR: #{link} is not available"
+            end
+        end
     end
 
     def link_available?(link)
@@ -29,16 +35,22 @@ class Ssereport
         @ids.each do |link|
             if link_available?(link)
                 doc = open(link)
-                reader = PDF::Reader.new(doc)
-                puts reader.info
-                outfile = File.open("out.txt", "w+")
+                @reader = PDF::Reader.new(doc)
+                puts @reader.info
+                #outfile = File.open("out.txt", "w+")
                 #reader.pages.each do |page|
-                    page = reader.page(1)
-                    outfile.write page.text
+                #    page = reader.page(1)
+                #    outfile.write page.text
                 #end
             else
                 puts "ERROR: #{link} is not available"
             end
+        end
+    end
+
+    def get_data
+        @reader.pages.each do |page|
+            content = page.text
         end
     end
 
@@ -51,6 +63,4 @@ end
 
 
 report = Ssereport.new("stock.txt")
-report.read_from_file
-report.open_report
 #report.test
